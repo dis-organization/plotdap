@@ -316,22 +316,30 @@ add_griddap <- function(plot, grid, var, fill = "viridis",
   if (is_ggplotdap(plot)) {
     # TODO: not the most efficient approach, but it will have to do for now
     # https://twitter.com/hadleywickham/status/841763265344487424
-    s <- sf::st_as_sf(raster::rasterToPolygons(r))
-    vars <- setdiff(names(s), "geometry")
-    sg <- sf::st_as_sf(tidyr::gather_(s, "variable", "value", vars))
+   # s <- sf::st_as_sf(raster::rasterToPolygons(r))
+    #vars <- setdiff(names(s), "geometry")
+    #sg <- sf::st_as_sf(tidyr::gather_(s, "variable", "value", vars))
+   # s <- setNames(as.data.frame(coordinates(r)), c("X", "Y"))
+  #  s$value <- values(r)
+
+    ## MDS give up, we are too tightly bound to coord_sf downstream
+    s <- raster::as.data.frame(r, xy = TRUE, long = FALSE)
+    vars <- setdiff(names(s), c("x", "y"))
+    sg <- tidyr::gather_(s, "variable", "value", vars)
     mapping <- if (animate) {
       try_gganimate()
       plot$animate <- TRUE
       plot$ani.args <- ani.args
-      aes_string(fill = "value", colour = "value", frame = "variable")
+      aes_string(x = "X", y = "Y", fill = "value", frame = "variable")
     } else {
-      aes_string(fill = "value", colour = "value")
+      aes_string(x = "X", y = "Y", fill = "value")
     }
 
     return(
       add_ggplot(
         plot,
-        geom_sf(data = sg, mapping = mapping, ...),
+#        geom_sf(data = sg, mapping = mapping, ...),
+        geom_raster(data = sg, mapping = mapping, ...),
         scale_fill_gradientn(name = lazyeval::f_text(var), colors = cols),
         scale_colour_gradientn(colors = cols),
         guides(colour = FALSE)
