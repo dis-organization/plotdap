@@ -323,6 +323,10 @@ add_griddap <- function(plot, grid, var, fill = "viridis",
   #  s$value <- values(r)
 
     ## MDS give up, we are too tightly bound to coord_sf downstream
+    ## can see two major problems:
+    ## - the upfront CRS would be fine but a later change would invalidate the reprojection done
+    ## here first - does that matter?
+    ## - there's no way to facilitate the assumption downstream  that st_bbox can be used
     s <- raster::as.data.frame(r, xy = TRUE, long = FALSE)
     vars <- setdiff(names(s), c("x", "y"))
     sg <- tidyr::gather_(s, "variable", "value", vars)
